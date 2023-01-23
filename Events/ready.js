@@ -8,15 +8,15 @@ module.exports = {
     name: 'ready',
     description: 'on startup | expired punishments',
     on: true,
-    async execute (client){
-        console.log('Wrdl Bot online!');
+    async execute (client) {
+        console.log('Wrdl Bot online!')
 
         await mongoose.connect(mongoPath, {
             keepAlive: true
         }).then(() => {
             console.log('Connected to the database!')
         }).catch((err) => {
-            console.log(err);
+            console.log(err)
         });
         client.user.setActivity({
             name: `wordle games | /info`,
@@ -25,55 +25,59 @@ module.exports = {
         client.user.setStatus('online')
 
         //Check for inactive games
-        let Guilds = client.guilds.cache.map(guild => guild.id)
-        for (let guild of Guilds){
-            guild = client.guilds.cache.get(guild)
-            const check = async () => {
-                const query = {
-                    guildID: guild.id,
-                    expires: { $lt: new Date() },
-                }
-                const results = await gamesSchema.find(query)
+        try {
+            let Guilds = client.guilds.cache.map(guild => guild.id)
+            for (let guild of Guilds) {
+                guild = client.guilds.cache.get(guild)
+                const check = async () => {
+                    const query = {
+                        guildID: guild.id,
+                        expires: {$lt: new Date()},
+                    }
+                    const results = await gamesSchema.find(query)
 
-                const query2 = {
-                    guildID: guild.id,
-                }
+                    const query2 = {
+                        guildID: guild.id,
+                    }
 
-                if (!isIterable(results)){
-                    let channel = results.channelStarted
+                    if (!isIterable(results)) {
+                        await gamesSchema.deleteMany(query)
+                        let schema = await statsSchema.findOne(query2)
+                        schema.gamesLost = schema.gamesLost + 1
+                        schema.winRate = Math.trunc(schema.gamesWon / schema.gamesTotal * 100)
+                        await schema.save()
 
-                    const message = new MessageEmbed()
-                        .setTitle('Wordle Game')
-                        .setColor('RED')
-                        .setDescription(`Game for <@${results.userID}> has ended due to inactivity`)
-                    await client.channels.cache.get(channel).send({ embeds: [message] })
-                    await gamesSchema.deleteMany(query)
-
-                    let schema = await statsSchema.findOne(query2)
-                    schema.gamesLost = schema.gamesLost + 1
-                    schema.winRate = Math.trunc(schema.gamesWon / schema.gamesTotal * 100)
-                    await schema.save()
-                }
-                else{
-                    for (const result of results){
-                        let channel = result.channelStarted
-
-                        const message2 = new MessageEmbed()
+                        let channel = results.channelStarted
+                        const message = new MessageEmbed()
                             .setTitle('Wordle Game')
                             .setColor('RED')
-                            .setDescription(`Game for <@${result.userID}> has ended due to inactivity`)
-                        await client.channels.cache.get(channel).send({ embeds: [message2] })
-                        await gamesSchema.deleteMany(query)
+                            .setDescription(`<@${results.userID}>'s game has ended due to inactivity`)
 
-                        let schema2 = await statsSchema.findOne(query2)
-                        schema2.gamesLost = schema2.gamesLost + 1
-                        schema2.winRate = Math.trunc(schema2.gamesWon / schema2.gamesTotal * 100)
-                        await schema2.save()
+                        await client.channels.cache.get(channel).send({ embeds: [message] })
                     }
+                    else {
+                        for (const result of results) {
+                            await gamesSchema.deleteMany(query)
+                            let schema2 = await statsSchema.findOne(query2)
+                            schema2.gamesLost = schema2.gamesLost + 1
+                            schema2.winRate = Math.trunc(schema2.gamesWon / schema2.gamesTotal * 100)
+                            await schema2.save()
+
+                            let channel = result.channelStarted
+                            const message2 = new MessageEmbed()
+                                .setTitle('Wordle Game')
+                                .setColor('RED')
+                                .setDescription(`<@${result.userID}>'s game has ended due to inactivity`)
+
+                            await client.channels.cache.get(channel).send({ embeds: [message2] })
+                        }
+                    }
+                    setTimeout(check, 1000 * 30)
                 }
-                setTimeout(check, 1000 * 30)
+                await check()
             }
-            await check()
+        } catch (err) {
+            console.log(err)
         }
     }
 }

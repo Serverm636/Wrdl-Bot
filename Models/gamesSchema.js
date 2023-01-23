@@ -13,6 +13,8 @@ const schema = new Schema({
         word: reqString,
         guesses: reqString,
         replyMessage: reqString,
+        alphabet: reqString,
+        language: reqString,
         expires: reqString,
     },
     {
