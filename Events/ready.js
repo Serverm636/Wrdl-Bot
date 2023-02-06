@@ -6,7 +6,7 @@ const statsSchema = require('../Models/statsSchema')
 
 module.exports = {
     name: 'ready',
-    description: 'on startup | expired punishments',
+    description: 'on startup | expired games',
     on: true,
     async execute (client) {
         console.log('Wrdl Bot online!')
@@ -38,6 +38,7 @@ module.exports = {
                 let dt = new Date(expires1.getTime() + 120 * 60 * 1000)
                 dt = dt.toLocaleString('ro-RO', { timezone: 'Europe/Bucharest' })
                 const query = {
+                    guildID: guild.id,
                     expires: {$lt: dt},
                 }
                 const results = await gamesSchema.find(query)
@@ -64,7 +65,8 @@ module.exports = {
                             .setDescription(`<@${results.userID}>'s game has ended due to inactivity`)
 
                         await client.channels.cache.get(channel).send({ embeds: [message] })
-                    } else {
+                    }
+                    else {
                         for (const result of results) {
                             console.log("Works iterable / guild")
                             let guildIDUser = result.guildID, userIDUser = result.userID
@@ -96,8 +98,6 @@ module.exports = {
             Check for expired outside of guild
 
             */
-
-            //Check for expired outside of guild
             let expires1 = new Date()
             let dt = new Date(expires1.getTime() + 120 * 60 * 1000)
             dt = dt.toLocaleString('ro-RO', { timezone: 'Europe/Bucharest' })
