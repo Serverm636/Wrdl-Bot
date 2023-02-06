@@ -4,7 +4,7 @@ const statsSchema = require('../Models/statsSchema')
 
 module.exports = {
     name: 'leaderboard',
-    description: 'shows the top players',
+    description: 'Shows the top players in that server',
     async execute(client, interaction){
         const guildID = interaction.guild.id
         const query = {

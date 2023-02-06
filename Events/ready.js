@@ -19,35 +19,44 @@ module.exports = {
             console.log(err)
         });
         client.user.setActivity({
-            name: `wordle games | /info`,
+            name: `wordle games | /help`,
             type: 'WATCHING'
         })
         client.user.setStatus('online')
 
         //Check for inactive games
-        let Guilds = client.guilds.cache.map(guild => guild.id)
-        for (let guild of Guilds) {
-            guild = client.guilds.cache.get(guild)
-            const check = async () => {
+        const check = async () => {
+            /*
+
+            Check for expired inside of guild
+
+            */
+            let Guilds = client.guilds.cache.map(guild => guild.id)
+            for (let guild of Guilds) {
+                guild = client.guilds.cache.get(guild)
                 let expires1 = new Date()
                 let dt = new Date(expires1.getTime() + 120 * 60 * 1000)
                 dt = dt.toLocaleString('ro-RO', { timezone: 'Europe/Bucharest' })
                 const query = {
-                    guildID: guild.id,
                     expires: {$lt: dt},
                 }
                 const results = await gamesSchema.find(query)
-                const query2 = {
-                    guildID: guild.id,
-                }
+                // const query2 = {
+                //     guildID: guild.id,
+                // }
                 try {
                     if (!isIterable(results)) {
+                        console.log("Works not iterable / guild")
+                        let guildIDUser = results.guildID, userIDUser = results.userID
+                        const query2 = {
+                            guildID: guildIDUser,
+                            userID: userIDUser,
+                        }
                         await gamesSchema.deleteMany(query)
                         let schema = await statsSchema.findOne(query2)
                         schema.gamesLost = schema.gamesLost + 1
                         schema.winRate = Math.trunc(schema.gamesWon / schema.gamesTotal * 100)
                         await schema.save()
-
                         let channel = results.channelStarted
                         const message = new MessageEmbed()
                             .setTitle('Wordle Game')
@@ -57,12 +66,17 @@ module.exports = {
                         await client.channels.cache.get(channel).send({ embeds: [message] })
                     } else {
                         for (const result of results) {
+                            console.log("Works iterable / guild")
+                            let guildIDUser = result.guildID, userIDUser = result.userID
+                            const query2 = {
+                                guildID: guildIDUser,
+                                userID: userIDUser,
+                            }
                             await gamesSchema.deleteMany(query)
                             let schema2 = await statsSchema.findOne(query2)
                             schema2.gamesLost = schema2.gamesLost + 1
                             schema2.winRate = Math.trunc(schema2.gamesWon / schema2.gamesTotal * 100)
                             await schema2.save()
-
                             let channel = result.channelStarted
                             const message2 = new MessageEmbed()
                                 .setTitle('Wordle Game')
@@ -75,10 +89,58 @@ module.exports = {
                 } catch (err) {
                     console.log(err)
                 }
-                setTimeout(check, 1000 * 30)
             }
-            await check()
+
+            /*
+
+            Check for expired outside of guild
+
+            */
+
+            //Check for expired outside of guild
+            let expires1 = new Date()
+            let dt = new Date(expires1.getTime() + 120 * 60 * 1000)
+            dt = dt.toLocaleString('ro-RO', { timezone: 'Europe/Bucharest' })
+            const query = {
+                expires: {$lt: dt},
+            }
+            const results = await gamesSchema.find(query)
+            try {
+                if (!isIterable(results)) {
+                    console.log("Works not iterable / no guild")
+                    let guildIDUser = results.guildID, userIDUser = results.userID
+                    const query2 = {
+                        guildID: guildIDUser,
+                        userID: userIDUser,
+                    }
+                    await gamesSchema.deleteMany(query)
+                    let schema = await statsSchema.findOne(query2)
+                    schema.gamesLost = schema.gamesLost + 1
+                    schema.winRate = Math.trunc(schema.gamesWon / schema.gamesTotal * 100)
+                    await schema.save()
+                }
+                else {
+                    for (const result of results) {
+                        console.log("Works iterable / no guild")
+                        let guildIDUser = result.guildID, userIDUser = result.userID
+                        const query2 = {
+                            guildID: guildIDUser,
+                            userID: userIDUser,
+                        }
+                        await gamesSchema.deleteMany(query)
+                        let schema2 = await statsSchema.findOne(query2)
+                        schema2.gamesLost = schema2.gamesLost + 1
+                        schema2.winRate = Math.trunc(schema2.gamesWon / schema2.gamesTotal * 100)
+                        await schema2.save()
+                    }
+                }
+            } catch (err) {
+                console.log(err)
+            }
+
+            setTimeout(check, 1000 * 30)
         }
+        await check()
     }
 }
 
