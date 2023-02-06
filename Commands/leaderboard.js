@@ -1,10 +1,9 @@
-const { Client, CommandInteraction} = require('discord.js')
 const { MessageEmbed } = require('discord.js')
 const statsSchema = require('../Models/statsSchema')
 
 module.exports = {
     name: 'leaderboard',
-    description: 'Shows the top players in that server',
+    description: 'Shows the top players on this server',
     async execute(client, interaction){
         const guildID = interaction.guild.id
         const query = {

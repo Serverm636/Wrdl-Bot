@@ -1,4 +1,3 @@
-const { Client, CommandInteraction } = require('discord.js')
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js')
 const fs = require('fs')
 const gamesSchema = require('../Models/gamesSchema')
@@ -104,7 +103,7 @@ module.exports = {
                         .setTitle('Wordle Game')
                         .setColor('RED')
                         .setDescription('❗ Time has expired')
-                    return await interaction.editReply({embeds: [messageExpired], components: [deadRow]})
+                    return await interaction.editReply({ embeds: [messageExpired], components: [deadRow] })
                 })
 
                 const ROMessage = new MessageEmbed()
@@ -142,7 +141,7 @@ module.exports = {
                 alphabetGray[10] = '<:K_gray:1012693005548920852> '
                 alphabetGray[11] = '<:L_gray:1012693006769463408> '
                 alphabetGray[12] = '<:M_gray:1012693008300396564> '
-                alphabetGray[13] = '<:N_gray:1012693009411878953> '
+                alphabetGray[13] = '\n<:N_gray:1012693009411878953> '
                 alphabetGray[14] = '<:O_gray:1012693011286736957> '
                 alphabetGray[15] = '<:P_gray:1012693012956057640> '
                 alphabetGray[16] = '<:Q_gray:1012693014516342864> '
@@ -162,12 +161,9 @@ module.exports = {
                     else {
                         alphabetLetters += alphabetGray[i]
                     }
-                    if (i === 12) {
-                        alphabetLetters += '\n'
-                    }
                 }
                 if (ENGame) {
-                    await interaction.editReply({embeds: [ENMessage], components: [deadRowEN]})
+                    await interaction.editReply({ embeds: [ENMessage], components: [deadRowEN] })
                     let word = randomWord_EN()
 
                     //Stats database
@@ -188,7 +184,7 @@ module.exports = {
                     await schema.save();
                 }
                 if (ROGame) {
-                    await interaction.editReply({embeds: [ROMessage], components: [deadRowRO]})
+                    await interaction.editReply({ embeds: [ROMessage], components: [deadRowRO] })
                     let word = randomWord_RO()
 
                     //Stats database

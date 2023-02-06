@@ -42,12 +42,8 @@ module.exports = {
                     expires: {$lt: dt},
                 }
                 const results = await gamesSchema.find(query)
-                // const query2 = {
-                //     guildID: guild.id,
-                // }
                 try {
                     if (!isIterable(results)) {
-                        console.log("Works not iterable / guild")
                         let guildIDUser = results.guildID, userIDUser = results.userID
                         const query2 = {
                             guildID: guildIDUser,
@@ -68,7 +64,6 @@ module.exports = {
                     }
                     else {
                         for (const result of results) {
-                            console.log("Works iterable / guild")
                             let guildIDUser = result.guildID, userIDUser = result.userID
                             const query2 = {
                                 guildID: guildIDUser,
@@ -107,7 +102,6 @@ module.exports = {
             const results = await gamesSchema.find(query)
             try {
                 if (!isIterable(results)) {
-                    console.log("Works not iterable / no guild")
                     let guildIDUser = results.guildID, userIDUser = results.userID
                     const query2 = {
                         guildID: guildIDUser,
@@ -121,7 +115,6 @@ module.exports = {
                 }
                 else {
                     for (const result of results) {
-                        console.log("Works iterable / no guild")
                         let guildIDUser = result.guildID, userIDUser = result.userID
                         const query2 = {
                             guildID: guildIDUser,
@@ -137,7 +130,6 @@ module.exports = {
             } catch (err) {
                 console.log(err)
             }
-
             setTimeout(check, 1000 * 30)
         }
         await check()
