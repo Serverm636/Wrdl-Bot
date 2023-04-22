@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js')
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js')
 
 module.exports = {
     name: 'help',
@@ -6,13 +6,13 @@ module.exports = {
     async execute(client, interaction) {
         try {
             const embeds = []
-            const pages = {}
+            let page
 
-            embeds.push(new MessageEmbed()
+            embeds.push(new EmbedBuilder()
                 .setTitle('General Information')
                 .setDescription('**Wrdl** is a bot that allows you to play the famous game wordle on any server you like.')
                 .setColor('#FF964D')
-                .setThumbnail(client.user.avatarURL({dynamic: true, size: 512}))
+                .setThumbnail(client.user.avatarURL({ dynamic: true, size: 512 }))
                 .addFields({
                     name: '❓ \`/help\`',
                     value: 'Displays information about Wrdl Bot and the commands available',
@@ -28,11 +28,11 @@ module.exports = {
                 })
             )
 
-            embeds.push(new MessageEmbed()
+            embeds.push(new EmbedBuilder()
                 .setTitle('Commands Information')
                 .setDescription('A new game will end automatically after 3 minutes of inactivity or by command. **Either way is a loss for the player.**')
                 .setColor('#FF964D')
-                .setThumbnail(client.user.avatarURL({dynamic: true, size: 512}))
+                .setThumbnail(client.user.avatarURL({ dynamic: true, size: 512 }))
                 .addFields({
                     name: '🚩 \`/start\`',
                     value: 'Start your own Wordle game, you will have to choose the preferred language every time',
@@ -53,19 +53,19 @@ module.exports = {
                 })
             )
 
-            embeds.push(new MessageEmbed()
+            embeds.push(new EmbedBuilder()
                 .setTitle('Stats Information')
-                .setDescription('With **Wrdl** you can view your stats or someone else\'s, as well as the leaderboard on the current server.')
+                .setDescription('With **Wrdl** you can view your stats or someone else\'s, as well as the leaderboard either on the current server or globally.')
                 .setColor('#FF964D')
-                .setThumbnail(client.user.avatarURL({dynamic: true, size: 512}))
+                .setThumbnail(client.user.avatarURL({ dynamic: true, size: 512 }))
                 .addFields({
                     name: '❓ \`/stats\`',
-                    value: 'Displays either your or someone else\'s game statistics, either globally or from that specific server',
+                    value: 'Displays either your or someone else\'s game statistics, either globally or from that server',
                     inline: true,
                 })
                 .addFields({
                     name: '📜 \`/leaderboard\`',
-                    value: 'Displays the current leaderboard on the server',
+                    value: 'Displays the current leaderboard either on the server or globally',
                     inline: true,
                 })
                 .setFooter({
@@ -73,96 +73,97 @@ module.exports = {
                 })
             )
 
-            const getRow = (id) => {
-                const row = new MessageActionRow()
+            const getRow = () => {
+                const row = new ActionRowBuilder()
 
                 row.addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId('page1')
-                        .setStyle('SUCCESS')
+                        .setStyle(ButtonStyle.Success)
                         .setLabel('Page 1')
-                        .setDisabled(pages[id] === 0)
+                        .setDisabled(page === 0)
                 )
 
                 row.addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId('page2')
-                        .setStyle('SUCCESS')
+                        .setStyle(ButtonStyle.Success)
                         .setLabel('Page 2')
-                        .setDisabled(pages[id] === 1)
+                        .setDisabled(page === 1)
                 )
 
                 row.addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId('page3')
-                        .setStyle('SUCCESS')
+                        .setStyle(ButtonStyle.Success)
                         .setLabel('Page 3')
-                        .setDisabled(pages[id] === 2)
+                        .setDisabled(page === 2)
                 )
                 return row
             }
 
-            const deadRow = new MessageActionRow()
+            const deadRow = new ActionRowBuilder()
 
             deadRow.addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId('page1_disabled')
-                    .setStyle('SECONDARY')
+                    .setStyle(ButtonStyle.Secondary)
                     .setLabel('Page 1')
                     .setDisabled(true)
             )
 
             deadRow.addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId('page2_disabled')
-                    .setStyle('SECONDARY')
+                    .setStyle(ButtonStyle.Secondary)
                     .setLabel('Page 2')
                     .setDisabled(true)
             )
 
             deadRow.addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId('page3_disabled')
-                    .setStyle('SECONDARY')
+                    .setStyle(ButtonStyle.Secondary)
                     .setLabel('Page 3')
                     .setDisabled(true)
             )
 
             const id = interaction.user.id
-            pages[id] = pages[id] || 0
-            const embed = embeds[pages[id]]
-            let collector
+            page = 0
             const filter = (interaction) => interaction.user.id === id
             const time = 1000 * 60 * 5
-            await interaction.reply({embeds: [embed], components: [getRow(id)]})
-            collector = interaction.channel.createMessageComponentCollector({filter, time})
+            await interaction.reply({ embeds: [embeds[page]], components: [getRow()] })
+            const collector = interaction.channel.createMessageComponentCollector({ filter, time })
             collector.on('collect', async (btnInt) => {
                 if (!btnInt) {
-                    return;
+                    return
                 }
-                // interaction.deferReply()
                 if (btnInt.customId !== 'page1' && btnInt.customId !== 'page2' && btnInt.customId !== 'page3') {
-                    return;
+                    return
                 }
-                await btnInt.deferUpdate()
                 switch (btnInt.customId) {
                     case 'page1':
-                        pages[id] = 0
-                        break;
+                        page = 0
+                        break
                     case 'page2':
-                        pages[id] = 1
-                        break;
+                        page = 1
+                        break
                     case 'page3':
-                        pages[id] = 2
-                        break;
+                        page = 2
+                        break
                 }
-                await interaction.editReply({embeds: [embeds[pages[id]]], components: [getRow(id)]})
+                await interaction.editReply({ embeds: [embeds[page]], components: [getRow()] })
+                try {
+                    await btnInt.deferUpdate()
+                } catch (err) {
+                    //nimic
+                }
             })
             collector.on('end', async () => {
-                await interaction.editReply({embeds: [embeds[pages[id]]], components: [deadRow]})
+                await interaction.editReply({ embeds: [embeds[page]], components: [deadRow] })
             })
         } catch(err) {
-            console.log("User ran 2 times the help command")
+            console.log(err)
         }
     }
 }
